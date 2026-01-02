@@ -1,0 +1,9 @@
+# Firebase secret
+firebase_key.json
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment
+.env
