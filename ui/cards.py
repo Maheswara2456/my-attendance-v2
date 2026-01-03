@@ -1,59 +1,45 @@
 import streamlit as st
-from logic.attendance_calc import (
-    calculate_attendance,
-    required_classes_for_75,
-    predict_attendance
-)
+from logic.attendance_calc import calculate_attendance
+
 
 def render_cards(df, subjects):
+    """
+    Render subject-wise attendance cards
+    """
+
+    # If dataframe is empty
+    if df.empty:
+        st.info("No attendance data available")
+        return
+
     cols = st.columns(len(subjects))
 
-    for i, (label, col) in enumerate(subjects.items()):
-        p, t, pct = calculate_attendance(df[col])
+    for col_ui, (col_name, label) in zip(cols, subjects.items()):
+        with col_ui:
+            st.markdown(f"### {label}")
 
-        if t == 0:
-            bg = "#2c2c2c"
-            status = "No Classes"
-            color = "#ccc"
-            extra_html = ""
-        else:
-            need = required_classes_for_75(p, t)
-            attend_next = predict_attendance(p, t, attend=True)
-            skip_next = predict_attendance(p, t, attend=False)
+            # Safety: column missing
+            if col_name not in df.columns:
+                st.metric(
+                    label="Attendance",
+                    value="0.00%",
+                    delta="No Classes"
+                )
+                continue
 
-            if pct < 75:
-                bg = "#7f1d1d"
-                status = "⚠ Low Attendance"
-                color = "#facc15"
+            # Calculate attendance
+            present, total, percent = calculate_attendance(df[col_name])
+
+            # Display card
+            if total == 0:
+                st.metric(
+                    label="Attendance",
+                    value="0.00%",
+                    delta="No Classes"
+                )
             else:
-                bg = "#166534"
-                status = "✅ Safe"
-                color = "#4cff88"
-
-            extra_html = (
-                "<hr style='opacity:0.25'>"
-                "<div style='font-size:13px;line-height:1.6'>"
-                f"🎯 Need <b>{need}</b> more classes for 75%<br>"
-                f"➕ Attend next: <b>{attend_next:.1f}%</b><br>"
-                f"➖ Skip next: <b>{skip_next:.1f}%</b>"
-                "</div>"
-            )
-
-        card_html = (
-            "<div style='"
-            f"background:{bg};"
-            "padding:20px;"
-            "border-radius:16px;"
-            "text-align:center;"
-            "box-shadow:0 10px 25px rgba(0,0,0,0.35);"
-            "'>"
-            f"<h3>{label}</h3>"
-            f"<p>{p} / {t}</p>"
-            f"<h2 style='color:{color}'>{pct:.1f}%</h2>"
-            f"<p>{status}</p>"
-            f"{extra_html}"
-            "</div>"
-        )
-
-        with cols[i]:
-            st.markdown(card_html, unsafe_allow_html=True)
+                st.metric(
+                    label="Attendance",
+                    value=f"{percent:.2f}%",
+                    delta=f"{present}/{total}"
+                )

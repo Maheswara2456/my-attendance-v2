@@ -1,7 +1,12 @@
 import streamlit as st
 
+
 def export_data(df):
     st.subheader("📤 Export Attendance")
+
+    if df.empty:
+        st.info("No attendance data available to export")
+        return
 
     csv_data = df.to_csv(index=False).encode("utf-8")
 
