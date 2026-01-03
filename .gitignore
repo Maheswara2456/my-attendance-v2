@@ -1,9 +1,48 @@
-# Firebase secret
-firebase_key.json
-
-# Python cache
+# ===============================
+# Python cache & compiled files
+# ===============================
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Environment
-.env
+# ===============================
+# Virtual environments
+# ===============================
+venv/
+.env/
+.venv/
+
+# ===============================
+# Streamlit
+# ===============================
+.streamlit/secrets.toml
+
+# ===============================
+# Firebase / Secrets (CRITICAL)
+# ===============================
+firebase_key.json
+*.json
+
+# ===============================
+# Local data / backups
+# ===============================
+data/
+attendance.csv
+
+# ===============================
+# OS junk files
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# Editor / IDE files
+# ===============================
+.vscode/
+.idea/
+
+# ===============================
+# Logs
+# ===============================
+*.log
