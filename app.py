@@ -1,21 +1,38 @@
 import streamlit as st
+import pandas as pd
 
-from utils.data_loader import load_data, save_data
 from ui.styles import apply_styles
 from ui.cards import render_cards
 from features.export_data import export_data
-
 from features.daily_entry import daily_entry
 from features.manual_edit import manual_edit
 from features.delete_entry import delete_entry
+from utils.firebase_attendance import load_attendance, save_attendance
+
 
 # ===============================
 # PAGE CONFIG
 # ===============================
+st.write("DEPLOY CHECK — VERSION 2026-01-04 🔥")
+
 st.set_page_config(page_title="My Attendance", layout="wide")
 apply_styles()
 
 st.title("📊 My Personal Attendance Dashboard")
+
+
+# ===============================
+# LOGIN
+# ===============================
+st.sidebar.title("🔐 Login")
+user_email = st.sidebar.text_input("Enter your email")
+
+if not user_email:
+    st.warning("Please enter your email to continue")
+    st.stop()
+
+user_id = user_email.replace(".", "_").lower()
+
 
 # ===============================
 # SUBJECT CONFIG
@@ -25,50 +42,71 @@ subjects = {
     "CC": "CC",
     "CSE": "CSE",
     "ANN": "ANN",
-    "BCCS": "BSCE"
+    "BCCS": "BCCS"
 }
 
-# ===============================
-# LOAD DATA (always fresh)
-# ===============================
-df = load_data()
 
 # ===============================
-# DAILY ENTRY (ADD / REPLACE)
+# LOAD DATA (ONCE)
 # ===============================
-daily_entry(df, subjects)
-st.divider()
+if "df" not in st.session_state:
+    raw_data = load_attendance(user_id)
+    st.session_state.df = (
+        pd.DataFrame(raw_data)
+        if raw_data
+        else pd.DataFrame(columns=["DATE", *subjects.keys()])
+    )
+
+df = st.session_state.df
+
 
 # ===============================
-# DELETE ENTRY (SAFE)
+# DAILY ENTRY
 # ===============================
-df, deleted = delete_entry(df)
-if deleted:
-    save_data(df)
+updated = daily_entry(df, subjects)
+if updated:
+    save_attendance(user_id, df.to_dict(orient="records"))
+    st.session_state.df = df
     st.rerun()
 
 st.divider()
 
+
 # ===============================
-# DASHBOARD CARDS
+# DELETE ENTRY
+# ===============================
+df, deleted = delete_entry(df)
+if deleted:
+    save_attendance(user_id, df.to_dict(orient="records"))
+    st.session_state.df = df
+    st.rerun()
+
+st.divider()
+
+
+# ===============================
+# DASHBOARD
 # ===============================
 st.subheader("📘 Subject-wise Attendance")
 render_cards(df, subjects)
+
 st.divider()
-st.divider()
+
+
+# ===============================
+# EXPORT
+# ===============================
 export_data(df)
+
 st.divider()
+
 
 # ===============================
 # MANUAL EDIT
 # ===============================
 df, changed = manual_edit(df)
 if changed:
-    save_data(df)
+    save_attendance(user_id, df.to_dict(orient="records"))
+    st.session_state.df = df
     st.success("✅ Manual changes saved")
     st.rerun()
-
-# ===============================
-# FINAL SAVE (SAFETY)
-# ===============================
-save_data(df)
