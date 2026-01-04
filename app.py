@@ -11,11 +11,15 @@ from utils.firebase_attendance import load_attendance, save_attendance
 
 
 # ===============================
-# PAGE CONFIG
+# PAGE CONFIG (MUST BE FIRST)
 # ===============================
-st.write("DEPLOY CHECK — VERSION 2026-01-04 🔥")
+st.set_page_config(
+    page_title="My Attendance",
+    page_icon="assets/icon-512.png",
+    layout="wide"
+)
 
-st.set_page_config(page_title="My Attendance", layout="wide")
+st.write("DEPLOY CHECK — VERSION 2026-01-04 🔥")
 apply_styles()
 
 st.title("📊 My Personal Attendance Dashboard")
@@ -24,7 +28,9 @@ st.title("📊 My Personal Attendance Dashboard")
 # ===============================
 # LOGIN
 # ===============================
+st.sidebar.image("assets/icon-512.png", width=110)
 st.sidebar.title("🔐 Login")
+
 user_email = st.sidebar.text_input("Enter your email")
 
 if not user_email:
